@@ -1,0 +1,175 @@
+//Explanation of main.js file
+
+
+// Animation for the login and signup form
+const signUpButton = document.getElementById('signUp');  // Get the "Sign Up" button element
+const signInButton = document.getElementById('signIn');  // Get the "Sign In" button element
+const container = document.querySelector('.container');  // Get the container element that holds the forms
+
+// When the "Sign Up" button is clicked, add the class 'right-panel-active' to the container
+signUpButton.addEventListener('click', () => {
+    container.classList.add('right-panel-active');
+});
+
+// When the "Sign In" button is clicked, remove the class 'right-panel-active' from the container
+signInButton.addEventListener('click', () => {
+    container.classList.remove('right-panel-active');
+});
+
+
+// Now the real code starts here
+
+// Password strength meter
+document.getElementById('signup-password').addEventListener('input', updatePasswordStrengthMeter);  
+// Add an event listener to the password input field to update the strength meter as the user types
+
+// Function to calculate and update the strength of the password
+function updatePasswordStrengthMeter() {
+    const password = document.getElementById('signup-password').value;  // Get the entered password
+    const strengthBar = document.getElementById('password-strength-bar');  // Get the strength bar element
+    const strength = calculatePasswordStrength(password);  // Calculate the strength of the password
+
+    strengthBar.style.width = strength + '%';  // Set the width of the strength bar according to the strength percentage
+
+    // Change the color of the strength bar based on the strength percentage
+    if (strength < 30) {
+        strengthBar.style.backgroundColor = 'red';
+    } else if (strength < 60) {
+        strengthBar.style.backgroundColor = 'orange';
+    } else if (strength < 80) {
+        strengthBar.style.backgroundColor = 'yellow';
+    } else {
+        strengthBar.style.backgroundColor = 'green';
+    }
+}
+
+// Function to calculate the strength of the password
+function calculatePasswordStrength(password) {
+    let strength = 0;
+    // Increment the strength score based on different password characteristics
+    if (password.length >= 8) strength += 20;  // Length of at least 8 characters
+    if (/[A-Z]/.test(password)) strength += 20;  // Contains uppercase letters
+    if (/[a-z]/.test(password)) strength += 20;  // Contains lowercase letters
+    if (/[0-9]/.test(password)) strength += 20;  // Contains numbers
+    if (/[^A-Za-z0-9]/.test(password)) strength += 20;  // Contains special characters
+    return strength;  // Return the total strength score
+}
+
+
+// Function to toggle password visibility
+function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);  // Get the password input element by its ID
+    const eyeIcon = document.getElementById(iconId);  // Get the eye icon element
+
+    // Toggle the input field type between password and text to show or hide the password
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';  // Show password
+        eyeIcon.classList.remove('fa-eye');  // Change icon to 'eye-slash'
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';  // Hide password
+        eyeIcon.classList.remove('fa-eye-slash');  // Change icon back to 'eye'
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+
+
+// Function to handle signup for multiple users
+function signup() {
+    const username = document.getElementById("signup-username").value;  // Get the entered username
+    const useremail = document.getElementById("signup-useremail").value;  // Get the entered email
+    const password = document.getElementById("signup-password").value;  // Get the entered password
+
+    if (username && password) {  // Check if both username and password are provided
+        let users = JSON.parse(localStorage.getItem("users")) || [];  // Get existing users from localStorage or initialize an empty array
+
+        // Check if the user with the same email already exists
+        const userExists = users.some(user => user.user_email === useremail);
+
+        if (userExists) {
+            // Show a toast message saying the user already exists
+            showToast('User already exists!', false);
+        } else {
+            // Add the new user to the users array with username, email, and password
+            users.push({ username: username, user_email: useremail, password: password });
+
+            // Save the updated users array to localStorage
+            localStorage.setItem("users", JSON.stringify(users));
+
+            // Clear the input fields after signup
+            document.getElementById("signup-username").value = "";
+            document.getElementById("signup-useremail").value = "";
+            document.getElementById("signup-password").value = "";
+
+            // Show a success toast message
+            showToast('Signup successful! Please log in.', true);
+
+            // Switch to the login panel after signup
+            container.classList.remove('right-panel-active');
+        }
+    } else {
+        // Show a toast message if email or password is missing
+        showToast('Please enter both email and password.', false);
+    }
+}
+
+
+// Function to handle login for multiple users
+function login() {
+    const useremail = document.getElementById("login-useremail").value;  // Get the entered email
+    const password = document.getElementById("login-password").value;  // Get the entered password
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];  // Get the users array from localStorage
+
+    // Find a user with matching email and password
+    const user = users.find(user => user.user_email === useremail && user.password === password);
+
+    if (user) {
+        // If login is successful, store the username in localStorage
+        localStorage.setItem('username', user.username);  // Store the username
+
+        // Show a success toast message
+        showToast('Login successful! Redirecting to home page...', true);
+
+        // Clear the login input fields
+        document.getElementById("login-useremail").value = "";
+        document.getElementById("login-password").value = "";
+
+        // Redirect to the home page after 1 second
+        setTimeout(() => {
+            window.location.href = "./home.html";  // Redirect to the home page
+        }, 1000);  // Delay for 1 second
+    } else {
+        // Show error message if login fails
+        showToast('Invalid email or password.', false);
+
+        if (useremail === "" || password === "") {
+            showToast('Please enter both email and password.', false);
+        }
+    }
+}
+
+
+// Function to show toast messages for feedback
+function showToast(message, isSuccess) {
+    const toast = document.getElementById('toast');  // Get the toast element
+    toast.textContent = message;  // Set the message in the toast
+    toast.className = 'toast show';  // Show the toast
+
+    if (isSuccess) {
+        toast.classList.add('success');  // Add 'success' class if the message is a success
+    } else {
+        toast.classList.add('failure');  // Add 'failure' class if the message is an error
+    }
+
+    // Hide the toast after 3 seconds
+    setTimeout(() => {
+        toast.className = 'toast';  // Reset the class to hide the toast
+    }, 3000);
+}
+
+
+// Function to handle logout
+function logout() {
+    window.location.href = "./index.html";  // Redirect to the login page
+}
